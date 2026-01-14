@@ -143,10 +143,10 @@ int main(void)
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
   HAL_TIM_Base_Start(&htim2);
 
-  htim2.hdma[TIM_DMA_ID_CC1]->XferCpltCallback = IC_DMA_XferCpltCallback;
-  htim2.hdma[TIM_DMA_ID_CC2]->XferCpltCallback = IC_DMA_XferCpltCallback;
-  htim2.hdma[TIM_DMA_ID_CC3]->XferCpltCallback = IC_DMA_XferCpltCallback;
-  htim2.hdma[TIM_DMA_ID_CC4]->XferCpltCallback = IC_DMA_XferCpltCallback;
+  //htim2.hdma[TIM_DMA_ID_CC1]->XferCpltCallback = IC_DMA_XferCpltCallback;
+  //htim2.hdma[TIM_DMA_ID_CC2]->XferCpltCallback = IC_DMA_XferCpltCallback;
+  //htim2.hdma[TIM_DMA_ID_CC3]->XferCpltCallback = IC_DMA_XferCpltCallback;
+  //htim2.hdma[TIM_DMA_ID_CC4]->XferCpltCallback = IC_DMA_XferCpltCallback;
 
   HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_1, ic_ch1_buf, IC_BUF_LEN);
   HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_2, ic_ch2_buf, IC_BUF_LEN);
@@ -413,27 +413,42 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-// En esta función hacemos el callback del DMA se ejecute cuando el buffer esté completo
-void IC_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma)
+/* Callback DMA Input Capture */
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-    if (hdma == htim2.hdma[TIM_DMA_ID_CC1])
+    if ((htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) || 
+            (htim->hdma[TIM_DMA_ID_CC1] != NULL && htim->hdma[TIM_DMA_ID_CC1]->State == HAL_DMA_STATE_READY))
     {
         ic_ch1_ready = 1;
     }
-    else if (hdma == htim2.hdma[TIM_DMA_ID_CC2])
-    {
+    else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
         ic_ch2_ready = 1;
-    }
-    else if (hdma == htim2.hdma[TIM_DMA_ID_CC3])
-    {
+    else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3)
         ic_ch3_ready = 1;
-    }
-    else if (hdma == htim2.hdma[TIM_DMA_ID_CC4])
-    {
+    else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4)
         ic_ch4_ready = 1;
-    }
 }
+
+// En esta función hacemos el callback del DMA se ejecute cuando el buffer esté completo
+//void IC_DMA_XferCpltCallback(DMA_HandleTypeDef *hdma)
+//{
+//    if (hdma == htim2.hdma[TIM_DMA_ID_CC1])
+//    {
+//        ic_ch1_ready = 1;
+//    }
+//    else if (hdma == htim2.hdma[TIM_DMA_ID_CC2])
+//    {
+//        ic_ch2_ready = 1;
+//    }
+//    else if (hdma == htim2.hdma[TIM_DMA_ID_CC3])
+//    {
+//        ic_ch3_ready = 1;
+//    }
+//    else if (hdma == htim2.hdma[TIM_DMA_ID_CC4])
+//    {
+//        ic_ch4_ready = 1;
+//    }
+//}
 
 
 
@@ -484,31 +499,7 @@ void Print_IC_Buffer(uint8_t ch, uint32_t *buf, uint32_t len)
 //}
 
 // NO es necesario, ya se sabe cual es el canal correspondiente a cada buffer
-/* Callback DMA Input Capture */
-//void HAL_TIM_IC_CaptureCpltCallback(TIM_HandleTypeDef *htim)
-//{
-//    if (htim->Instance != TIM2)
-//        return;
-//
-//    uint8_t ch = 0;
-//    uint32_t *buf = NULL;
-//
-//    if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
-//        { ch = 1; buf = ic_ch1_buf; }
-//    else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
-//        { ch = 2; buf = ic_ch2_buf; }
-//    else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3)
-//        { ch = 3; buf = ic_ch3_buf; }
-//    else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4)
-//        { ch = 4; buf = ic_ch4_buf; }
-//
-//    if (!buf)
-//        return;
-//
-//    for (uint32_t i = 0; i < IC_BUF_LEN; i++)
-//        push_event(ch, buf[i]);
-//}
-//
+
 
 /* Overflow del TIM2 → extiende a 64 bits */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
